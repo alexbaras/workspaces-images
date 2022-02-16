@@ -7,10 +7,12 @@ if [ "${ARCH}" == "arm64" ] ; then
     exit 0
 fi
 
-
-curl -L -o teams.deb  "https://go.microsoft.com/fwlink/p/?linkid=2112886&clcid=0x409&culture=en-us&country=us"
-apt-get install -y ./teams.deb
-rm teams.deb
+cd /tmp
+# curl -L -o teams.deb  "https://go.microsoft.com/fwlink/p/?linkid=2112886&clcid=0x409&culture=en-us&country=us"
+TEAMS_VERSION="teams_1.4.00.26453_amd64.deb"
+curl -o $TEAMS_VERSION "https://packages.microsoft.com/repos/ms-teams/pool/main/t/teams/$TEAMS_VERSION"
+apt-get install -y ./$TEAMS_VERSION
+rm $TEAMS_VERSION
 sed -i "s/Exec=teams/Exec=teams --no-sandbox/g" /usr/share/applications/teams.desktop
 cp /usr/share/applications/teams.desktop $HOME/Desktop/
 chmod +x $HOME/Desktop/teams.desktop

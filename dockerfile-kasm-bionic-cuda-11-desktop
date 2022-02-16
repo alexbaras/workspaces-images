@@ -1,0 +1,74 @@
+FROM baras.azurecr.io/core-bionic-cuda-11:1.10.0
+
+USER root
+
+ENV HOME /home/kasm-default-profile
+ENV STARTUPDIR /dockerstartup
+WORKDIR $HOME
+
+### Envrionment config
+ENV DEBIAN_FRONTEND noninteractive
+ENV KASM_RX_HOME $STARTUPDIR/kasmrx
+ENV INST_SCRIPTS $STARTUPDIR/install
+
+### Install Tools
+COPY ./src/ubuntu/install/tools $INST_SCRIPTS/tools/
+RUN bash $INST_SCRIPTS/tools/install_tools_deluxe.sh  && rm -rf $INST_SCRIPTS/tools/
+
+# Install Utilities
+COPY ./src/ubuntu/install/misc $INST_SCRIPTS/misc/
+RUN bash $INST_SCRIPTS/misc/install_tools.sh && rm -rf $INST_SCRIPTS/misc/
+
+# Install Google Chrome
+COPY ./src/ubuntu/install/chrome $INST_SCRIPTS/chrome/
+RUN bash $INST_SCRIPTS/chrome/install_chrome.sh  && rm -rf $INST_SCRIPTS/chrome/
+
+# Install Firefox
+COPY ./src/ubuntu/install/firefox/ $INST_SCRIPTS/firefox/
+COPY ./src/ubuntu/install/firefox/firefox.desktop $HOME/Desktop/
+RUN bash $INST_SCRIPTS/firefox/install_firefox.sh && rm -rf $INST_SCRIPTS/firefox/
+
+### Install Visual Studio Code
+COPY ./src/ubuntu/install/vs_code $INST_SCRIPTS/vs_code/
+RUN bash $INST_SCRIPTS/vs_code/install_vs_code.sh  && rm -rf $INST_SCRIPTS/vs_code/
+
+### Install Pycharm
+COPY ./src/ubuntu/install/pycharm $INST_SCRIPTS/pycharm/
+RUN bash $INST_SCRIPTS/pycharm/install_pycharm.sh  && rm -rf $INST_SCRIPTS/pycharm/
+COPY ./src/ubuntu/install/pycharm/pycharm.desktop ${HOME}/Desktop/
+
+### Install Teams
+COPY ./src/ubuntu/install/teams $INST_SCRIPTS/teams/
+RUN bash $INST_SCRIPTS/teams/install_teams.sh  && rm -rf $INST_SCRIPTS/teams/
+
+### Install Only Office
+COPY ./src/ubuntu/install/only_office $INST_SCRIPTS/only_office/
+RUN bash $INST_SCRIPTS/only_office/install_only_office.sh  && rm -rf $INST_SCRIPTS/only_office/
+
+### Install GIMP
+COPY ./src/ubuntu/install/gimp $INST_SCRIPTS/gimp/
+RUN bash $INST_SCRIPTS/gimp/install_gimp.sh  && rm -rf $INST_SCRIPTS/gimp/
+
+### Remove maxmius
+RUN apt-get remove -y maximus
+
+### Install python for ML
+# Setup python
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv python3-setuptools python3-doc
+RUN apt-get -y autoremove && apt-get -y autoclean
+RUN python3 -m pip install --upgrade pip
+# Install modules for machine learning / dataa analytics
+RUN python3 -m pip install numpy pandas tensorflow scikit-learn matplotlib seaborn
+
+#ADD ./src/common/scripts $STARTUPDIR
+RUN $STARTUPDIR/set_user_permission.sh $HOME
+
+RUN chown 1000:0 $HOME
+
+ENV HOME /home/kasm-user
+WORKDIR $HOME
+RUN mkdir -p $HOME && chown -R 1000:0 $HOME
+
+USER 1000
+
+CMD ["--tail-log"]
